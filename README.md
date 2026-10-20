@@ -1,5 +1,31 @@
 # dsh-bili-scroll 刷B站插件 WWW修改版
 
+> ### 这是 WWW 修改版：别人直接装这条，不用等上游合并
+>
+> ```bash
+> dsh plugin --profile web add github:wotorrrrr/www-dsh-bili-scroll#personal
+> ```
+>
+> 装完**重启一次 dsh** → 设置 → 刷B站。版本号会是 `0.1.19-WWW`。
+>
+> **和上游的区别**（本版 = 上游 0.1.18 + 下面这些，已实测跑过）：
+>
+> - 评论 **@ 名单里所有人**（上游只能轮流 @ 一个）
+> - **私信可以发给多个 UID**：一条评论 → 每个收件人各一条，正文去掉 @、末尾补视频链接
+> - **私信与评论同个人格**（上游禁止私信里自称「本鱼」，这里放开）
+> - **楼中楼只回带识别词的人**（留空照旧都回）
+> - **谷时起止时间可改**（原来是写死的 12:00–14:00 / 18:00–09:00）
+> - **节奏一句话**：每天最多 N 条 · 每 M 天一轮 · 每轮互动 K 条
+> - **投递两个独立开关**：公开评论、私信，可以只开一个
+> - **人格卡直接粘贴保存**（按名字切换，覆盖前拦「短太多」）
+> - **关键词逐词输入**
+> - **设置页显示「正在跑 / 上一轮结果」**
+> - **日报解析成结构**（今天汇总 + 每条标题）
+> - **报告写死**：每条评论带 rpid、私信逐条写清；评论正文不出现内部词
+>
+> 上游原版：[c1overzz/dsh-bili-scroll](https://github.com/c1overzz/dsh-bili-scroll)。
+> 想用原版就把上面那条命令换成 `github:c1overzz/dsh-bili-scroll`。
+
 > **先看三行**
 > - 需要 **dsh ≥ `0.1.7-rc.1`**（本机是 `0.1.7-rc.2`）。⚠️ 版本不满足时，**内核会静默跳过这个插件** —— 装了跟没装一样，不会报错。
 > - **空间**：不装「本地转写」约 **84 MB**；装了转写约 **1 GB**（其中 Whisper 模型 538 MB，可在设置里换更小的模型）。
@@ -45,8 +71,8 @@
 
 
 ```bash
-dsh plugin --profile web add dsh-bili-scroll      # 从 npm
-dsh plugin --profile web add github:c1overzz/dsh-bili-scroll   # 备选：直接从 GitHub
+dsh plugin --profile web add github:wotorrrrr/www-dsh-bili-scroll#personal   # 本修改版
+dsh plugin --profile web add github:c1overzz/dsh-bili-scroll                # 退回上游原版
 ```
 （⭐ 最省事的一条：把仓库链接贴给你自己的 dsh，说「**帮我装这个插件**」，它会自己装。）
 
@@ -122,8 +148,8 @@ dsh plugin --profile web add github:c1overzz/dsh-bili-scroll   # 备选：直接
 
 1. **先确认前提**：机器上有 `Python 3.10+` 或 `uv` 吗？（查 `python --version` / `uv --version`）
    两个都没有 ⇒ **建议装 `uv`**（单文件 exe、免管理员、能自带 Python）；
-2. **装插件**：`dsh plugin --profile web add github:c1overzz/dsh-bili-scroll`
-   （npm 上的 `dsh-bili-scroll` 同名同内容，审核通过后用 `add dsh-bili-scroll` 更省事）
+2. **装插件**：`dsh plugin --profile web add github:wotorrrrr/www-dsh-bili-scroll#personal`
+   （这是 WWW 修改版；只想用上游原版就换成 `github:c1overzz/dsh-bili-scroll`）
 3. ⚠️ **必须提醒用户重启一次 dsh** —— bundle 层要重启才组装，不重启插件不会生效；
 4. 重启后请用户进 **设置 → 刷B站**：先点「**装依赖**」（几十秒，进度就显示在页面下面）、再点「**扫码登录**」
    （手机 B 站扫码，**确认时选"记住我 / 长期"**）；
@@ -138,7 +164,8 @@ dsh plugin --profile web add github:c1overzz/dsh-bili-scroll   # 备选：直接
 
 ## 路线图
 
-- **0.1.x（当前 = 0.1.5）**：内置 MCP + 扫码登录 + 章程 + 设置页（峰谷级联开关 / 定量刷 / 自动评论 / 回复评论 / 工作区 / 日报三档）+ 谷时定时器 + 报告 + 看报告与打开文件夹 + 版本徽章 / 检查更新 / 一键升级 + **评论发出后复核**（0.1.4 起）
+- **0.1.x（本修改版当前 = 0.1.19-WWW，基于上游 0.1.18）**：内置 MCP + 扫码登录 + 章程 + 设置页 + 谷时定时器 + 报告与复核 + 版本徽章 / 检查更新 / 一键升级，外加上面「和上游的区别」那一串
+  · 升级只跟本仓库的 `personal` 分支（「检查更新」读的就是这里）
 - **0.1.6（在做）**：每轮记账（token 与花费）· 周末时段 · 数据目录可配 · 「停掉这一轮」按钮
 - **v0.2**：**用 JS 重写那几个接口 ⇒ 不再需要 Python**（零安装）；报告归档、失败重试
 
