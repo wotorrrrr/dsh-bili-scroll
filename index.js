@@ -845,7 +845,7 @@ export function apply(ctx, config) {
   const runUpgrade = () => {
     if (upgrading) return { ok: true, busy: true, log: installLogFile, hint: '正在升级，别重复点' }
     upgrading = true
-    const spec = lastUpdateSource === 'github' ? 'github:c1overzz/dsh-bili-scroll' : 'dsh-bili-scroll'
+    const spec = 'github:wotorrrrr/ww-dsh-bili-scroll#personal'
     appendInstall('\n=== ' + new Date().toISOString() + ' 开始升级（add ' + spec + '）===\n')
     ;(async () => {
       try {
@@ -1075,7 +1075,7 @@ export function apply(ctx, config) {
           + `🔴🔴 **私信是写给「人」看的，必须是干净的人话** —— **不许出现任何设置名 / 内部术语 / 台账口径** ✗：`
           + `autoComment、autoDm、only、both、判据、白名单、prompt、token、复核 这类词，**一个都不许出现在私信正文里**；`
           + `**更不许写「公开评论一条没发 / 楼中楼跳过」这种内部机制说明** ✗。`
-          + `⚠️ 私信里**不用 @ 任何人**；⚠️ 私信里**不要**写"本鱼 / 本鲸 / 主人 / 人家"那套；`
+          + `⚠️ 私信里**不用 @ 任何人**；⭐ **私信和评论是同一句话、同一个人格**：评论里怎么自称（包括"本鱼 / 本鲸"），私信里就怎么自称，一个字都别改；`
           + `⚠️ 发完把「已私信 ${dmTargets.length} 人 × N 条」记进报告，并逐条写一行「- 发给 UID xxx：BV号」；报告里可以写口径。`
         : '')
       + (commentsOn && cfg.replyToComments
@@ -1881,14 +1881,13 @@ export function apply(ctx, config) {
       try {
         if (fresh(ghUpdateCache)) ghVer = ghUpdateCache.latest
         else {
-          const r = await fetch('https://api.github.com/repos/c1overzz/dsh-bili-scroll/contents/package.json', {
-            signal: AbortSignal.timeout(6000),
-            headers: { 'user-agent': 'dsh-bili-scroll', accept: 'application/vnd.github+json' },
+          const r = await fetch('https://raw.githubusercontent.com/wotorrrrr/ww-dsh-bili-scroll/personal/package.json', {
+            signal: AbortSignal.timeout(8000),
+            headers: { 'user-agent': 'dsh-bili-scroll' },
           })
           if (r.ok) {
             const j = await r.json()
-            const txt = Buffer.from(String(j.content || ''), 'base64').toString('utf8')
-            ghVer = String(JSON.parse(txt).version || '')
+            ghVer = String(j.version || '')
             ghUpdateCache = { at: Date.now(), latest: ghVer }
           }
         }
@@ -1896,7 +1895,7 @@ export function apply(ctx, config) {
       // 谁新用谁；一样新时优先 npm（装起来快）
       if (ghVer && (!npmVer || cmp(ghVer, npmVer) > 0)) { out.latest = ghVer; out.source = 'github' }
       else out.latest = npmVer || ghVer
-      if (out.source === 'github') out.page = 'https://github.com/c1overzz/dsh-bili-scroll'
+      if (out.source === 'github') out.page = 'https://github.com/wotorrrrr/ww-dsh-bili-scroll'
       out.hasNew = Boolean(out.latest) && cmp(out.latest, out.current) > 0
       lastUpdateSource = out.source
       if (!out.latest) { out.ok = false; out.error = '两条源都没查到版本号（网络可能不通）' }

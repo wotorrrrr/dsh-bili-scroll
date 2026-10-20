@@ -1,7 +1,7 @@
 {
   "name": "dsh-bili-scroll",
-  "version": "0.1.18",
-  "description": "DSH 插件：每天替你刷一轮 B站 —— 读字幕挑出值得的、写一份日报，值得的就 @ 你",
+  "version": "0.1.19-WWW",
+  "description": "DSH 插件：每天替你刷一轮 B站 —— 读字幕挑出值得的、写一份日报，值得的就 @ 你（dsh-bili-scroll 刷B站插件 WWW修改版）",
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -10,9 +10,14 @@
     "mcp",
     "duty"
   ],
-  "repository": { "type": "git", "url": "git+https://github.com/c1overzz/dsh-bili-scroll.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/c1overzz/dsh-bili-scroll.git"
+  },
   "homepage": "https://github.com/c1overzz/dsh-bili-scroll#readme",
-  "bugs": { "url": "https://github.com/c1overzz/dsh-bili-scroll/issues" },
+  "bugs": {
+    "url": "https://github.com/c1overzz/dsh-bili-scroll/issues"
+  },
   "license": "MIT",
   "type": "module",
   "main": "index.js",
