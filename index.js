@@ -72,6 +72,7 @@ export const Config = !z ? undefined : z.object({
    *  ⚠️ 这里故意**不加 `.max(20)`**：schema 校验不过 ⇒ cordis 拒收这条 entry ⇒ **整条插件不激活** ✗
    *     （跟 schemastery 拿不到时的降级同一个道理）—— 范围一律由 clampPatch 在**写**和**读**两头钳。 */
   commentPerRound: z.natural().default(1).extra('volatile', true),
+  minViews: z.natural().default(1000).extra('volatile', true),
   /** ⭐ 要 @ 谁（B站 昵称）；**留空 = 不发评论** —— 评论存在的意义就是 @ 那一下 */
   mentionName: z.string().default('').extra('volatile', true),
   /** ⭐ 要 @ 谁的名单（可以有多个）：非空就以它为准，`mentionName` 只当老配置的兜底 */
@@ -339,7 +340,7 @@ export function apply(ctx, config) {
   const DEFAULTS = {
     perDay: 5, everyDays: 1, peakValley: false, noon: true, night: true, autoComment: false, autoDm: false, transcribe: false, asrModel: 'small',
     dmMode: '', dmUid: 0, dmUids: [],
-    keywords: [], commentPerRound: 1, mentionName: '', mentionNames: [], pythonPath: 'python', dshBin: '', headlessProfile: 'headless', overlayMcp: true, workspace: '', reportLevel: 'full', replyToComments: false, replyPerRound: 1, replyKeywords: [], windows: {}, personaName: '',
+    keywords: [], commentPerRound: 1, minViews: 1000, mentionName: '', mentionNames: [], pythonPath: 'python', dshBin: '', headlessProfile: 'headless', overlayMcp: true, workspace: '', reportLevel: 'full', replyToComments: false, replyPerRound: 1, replyKeywords: [], windows: {}, personaName: '',
   }
   const normalize = (src, base) => {
     const out = { ...base }
@@ -374,6 +375,7 @@ export function apply(ctx, config) {
     if ('replyToComments' in p) p.replyToComments = Boolean(p.replyToComments)
     if ('replyPerRound' in p) p.replyPerRound = Math.max(1, Math.min(Number(p.replyPerRound) || 1, 10))
     if ('commentPerRound' in p) p.commentPerRound = Math.max(0, Math.min(Number(p.commentPerRound) || 0, 20))
+    if ('minViews' in p) p.minViews = Math.max(0, Math.min(Number(p.minViews) || 0, 100000000))
     // ⭐ 2026-10-20：投递方式拆成两个独立开关（autoComment / autoDm），老键 dmMode 只在读到时迁移一次
     if ('dmMode' in p || 'autoComment' in p || 'autoDm' in p) Object.assign(p, migrateDelivery(p))
     // ⭐ 名单类：去空、去重、截断（评论 @ 多个人时正文放不下；私信收件人 10 个也够了）
@@ -1012,6 +1014,7 @@ export function apply(ctx, config) {
     const left = Math.max(0, quota - already)
     // ⭐ 2026-10-19：commentPerRound 升级成「每轮互动次数」—— 一个数同时压住「这一轮挑几条视频 / 发几条评论 / 私信里带几条」
     const interactN = Math.max(0, Math.min(Number(cfg.commentPerRound ?? 1) || 0, 20))
+    const minViews = Math.max(0, Math.min(Number(cfg.minViews ?? 1000) || 0, 100000000))
     const roundPick = Math.min(left, interactN)
     // ⭐ 2026-10-20：投递拆成两个独立开关 —— 「公开评论」(autoComment) 与「私信」(autoDm)，不再有 only/both
     const mentions = mentionListOf(cfg)   // 要 @ 谁：mentionNames 优先，mentionName 兜底
@@ -1060,7 +1063,7 @@ export function apply(ctx, config) {
       + `⭐ 另外把这一轮**看过的每一条视频（挑中的和跳过的都算）**追加进归档：${join(digestDir, `${dayKey().slice(0, 7)}.md`)}`
       + ` —— 一行一条：日期 · BV 号 · 标题 · UP · 一句话结论 · 链接（跳过的那条在后面注明理由）；`
       + `这是**给以后检索用**的（报告是给人看的，归档是给"回头翻"用的），别省略、也别只写挑中的。`
-      + `⭐ **播放量硬门槛**：只收播放量 **≥ 1000** 的视频；搜索结果里不到 1000 的一律跳过，别为凑数硬收。报告里写一行「因播放量不足 1000 跳过 N 条」（N=0 也写）。`
+      + `⭐ **播放量硬门槛**：只收播放量 **≥ ${minViews}** 的视频；搜索结果里不到 ${minViews} 的一律跳过，别为凑数硬收。报告里写一行「因播放量不足 ${minViews} 跳过 N 条」（N=0 也写）。`
       + `这一轮投递：${commentsOn && dmOn ? '公开评论 + 私信（两样都发）' : commentsOn ? '只发公开评论' : dmOn ? '只发私信（公开评论关着，一条公开评论都不发）' : '都不发（只写报告）'}。`
       + `🎭 **怎么写才像人**（比下面任何字数/格式要求都优先）：① 一句只干一件事：吐槽画面 / 说自己的反应 / 抛一句反问，别「总结视频 + 评价」两段式；② 必须带一个只有看过这期才写得出的细节（一个镜头、一句台词、一个数字），写不出就换一条；③ 三条不许同一句式：一条短叹、一条吐槽、一条接梗或反问；④ 像在朋友群里随手打的一句：允许半句、省略主语、允许「真绷不住了」这种；⑤ 禁用评价腔：值得看 / 讲得干净 / 太有活了 / 值一个三连 / X得挺Y / 这期质量很高，出现就重写；⑥ 不解释、不总结、不列点、不结尾客套；⑦ 私信就是同一句话（去 @、补链接），可以更随口，别改成翻译腔。⑧ 一轮三条别一个模子：至少一条是「互动型」——顺着视频的荒谬设定把「本鱼」放进去，再抛一个具体问句；其余可以是感慨 / 接梗 / 纯吐槽； ⑨ 问句是抛给名单里的人的（名单已经全 @ 了，问句就是给他们接的），别写成自问自答； ⑩ 表情：**每一条都可以带，一条最多一个，放句尾**；只用**人格卡「表情」那节列过**的 B 站表情名（如 [doge]、[笑哭]、[捂脸]），或者直接写 emoji；名字拿不准就别用 —— 发错了会显示成裸的方括号，很露馅。`
       + (commentsOn
@@ -1771,7 +1774,7 @@ export function apply(ctx, config) {
       const body = await readBody(req)
       const patch = {}
       for (const k of ['perDay', 'everyDays', 'peakValley', 'noon', 'night', 'autoComment', 'transcribe', 'asrModel',
-        'commentPerRound', 'mentionName', 'mentionNames', 'autoDm', 'dmMode', 'dmUid', 'dmUids',
+        'commentPerRound', 'minViews', 'mentionName', 'mentionNames', 'autoDm', 'dmMode', 'dmUid', 'dmUids',
         'keywords', 'pythonPath', 'dshBin', 'headlessProfile', 'workspace', 'reportLevel', 'replyToComments', 'replyPerRound',
         'replyKeywords', 'windows', 'personaName']) {
         if (k in body) patch[k] = body[k]

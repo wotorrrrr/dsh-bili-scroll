@@ -158,6 +158,7 @@ window.__ModuleLoader__.load({
       const [perDay, setPerDay] = React.useState(null)
       const [everyDays, setEveryDays] = React.useState(null)
       const [perRound, setPerRound] = React.useState(null)
+      const [minViews, setMinViews] = React.useState(null)
       const [replyPer, setReplyPer] = React.useState(null)
       const [replyKws, setReplyKws] = React.useState(null)   // 楼中楼识别词草稿（一行一个）
       const [personaName, setPersonaName] = React.useState(null)   // 当前人格名草稿
@@ -191,6 +192,7 @@ window.__ModuleLoader__.load({
         if (cfg && perDay === null) setPerDay(String(cfg.perDay ?? 5))
         if (cfg && everyDays === null) setEveryDays(String(cfg.everyDays ?? 1))
         if (cfg && perRound === null) setPerRound(String(cfg.commentPerRound ?? 1))
+        if (cfg && minViews === null) setMinViews(String(cfg.minViews ?? 1000))
         if (cfg && replyPer === null) setReplyPer(String(cfg.replyPerRound ?? 1))
         if (cfg && replyKws === null) setReplyKws((Array.isArray(cfg.replyKeywords) ? cfg.replyKeywords : []).join('\n'))
         // ⭐ 名单草稿：以 mentionNames 为准；老配置只有 mentionName 时把它塞进列表里（显示即所见）
@@ -578,6 +580,16 @@ window.__ModuleLoader__.load({
               onBlur: () => { const n = Math.max(0, Math.min(Number(perRound) || 0, 20)); setPerRound(String(n)); patch({ commentPerRound: n }, '每轮互动次数') },
             }),
             h('span', { 'data-bd-note': '' }, '条')),
+          h('div', { 'data-bd-row': '', style: { flexWrap: 'wrap', gap: '6px' } },
+            h('span', { 'data-bd-note': '' }, '播放量至少'),
+            h('input', {
+              'data-bd-input': '', 'data-bd-num': '', type: 'number', min: 0, max: 100000000,
+              style: { flex: '0 0 120px', textAlign: 'center' },
+              value: minViews ?? '',
+              onChange: (e) => setMinViews(e.target.value),
+              onBlur: () => { const n = Math.max(0, Math.min(Number(minViews) || 0, 100000000)); setMinViews(String(n)); patch({ minViews: n }, '播放量门槛') },
+            }),
+            h('span', { 'data-bd-note': '' }, '播放（不到这个数的视频不收）')),
           h('div', { 'data-bd-note': '' },
             '「每轮互动」一个数同时压住三处：这一轮挑几条视频、发几条评论、私信里带几条；填 0 = 这一轮不发评论/私信。'
             + ' 「每天最多挑」是全天总量；「每几天」只拦自动跑，手动按钮随时能跑。'),
