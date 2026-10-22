@@ -893,6 +893,9 @@ export function apply(ctx, config) {
     for (const g of [
       join(process.env.APPDATA || '', 'npm', 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js'),
       join(process.env.ProgramFiles || '', 'nodejs', 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js'),
+      // ⭐ 2026-10-22：DSH 桌面版 0.2.x 把 CLI 挪到 resources\runtime\cli\bin\dsh.cmd（不是 lib/bin.js）
+      join(process.resourcesPath || '', 'runtime', 'cli', 'bin', 'dsh.cmd'),
+      (() => { try { return join(dirname(process.execPath), 'resources', 'runtime', 'cli', 'bin', 'dsh.cmd') } catch { return '' } })(),
       '/usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js',
       '/usr/lib/node_modules/@deepseek-ai/dsh/lib/bin.js',
     ].filter(Boolean)) if (existsSync(g)) return g
@@ -962,6 +965,8 @@ export function apply(ctx, config) {
         autoDshLogged = cli
         log(`自动找到 dsh：${cli}（不用手填 dshBin 了）`)
       }
+      // ⭐ 2026-10-22：.cmd/.bat 不能交给 node 跑；路径里有空格（…\DeepSeek Harness\…），cmd.exe 不吃裸路径 ⇒ 整体加引号、走 shell
+      if (/\.(cmd|bat)$/i.test(cli)) return { command: `"${cli}"`, args: [], shell: true, fallback: true }
       return { command: process.execPath, args: [cli], shell: false }
     }
     // ⚠️ 走到这儿就是真找不到 —— 一定要出声（静默失败比报错更坏）
