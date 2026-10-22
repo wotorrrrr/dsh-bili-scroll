@@ -255,6 +255,8 @@ export function apply(ctx, config) {
     try { myVer = String(JSON.parse(readFileSync(join(pluginDir, 'package.json'), 'utf8')).version || '') } catch { myVer = '' }
     return myVer
   }
+  /** ⭐ 版本闸（2026-10-22 事故）：插件目录曾被换成上游 0.1.7，自动跑了一轮「老规则」（只 @ 一个人、私信合并成一条、没人格）。只有 WWW 版才允许跑一轮。 */
+  const versionOk = () => /^\d+\.\d+\.\d+-WWW$/.test(String(myVersion()))
   const stateDir = stateDirOf(ctx)
   /**
    * ⚠️ 2026-10-19（用户 `天文星球` 的截图）：装转写依赖时 uv 直接 exit 2 ——
@@ -1236,6 +1238,13 @@ export function apply(ctx, config) {
       return { started: false, why, error: `上一轮还在跑（已 ${mins} 分钟），等它结束` }
     }
     runningSince = Date.now()
+    // ⭐ 版本闸：不是 WWW 版就不跑（2026-10-22 教训：换回上游版后会按老规则跑，@ 错人、私信合并）
+    if (!versionOk()) {
+      runningSince = null
+      const msg = `这一轮没跑：插件版本不对（当前 ${myVersion() || '未知'}，应为 WWW 版）—— 插件可能被换回了上游版`
+      log(msg)
+      return { started: false, why, error: msg }
+    }
     const dsh = resolveDsh()
     // ⭐ 找不到 dsh 就别硬跑：以前会退化成裸 `dsh` ⇒ spawn 失败、只留 exit 1 + 一串乱码 ✗
     if (dsh.missing) {
@@ -1696,6 +1705,7 @@ export function apply(ctx, config) {
       loggedIn: hasCredential(),
       venvReady: venvReadyNow(),
       version: myVersion(),
+      versionOk: versionOk(),
       // 2026-10-18：这几项"本地存了、但没能同步到 DSH 原生设置" ⇒ 设置页要告诉用户
       // （DSH 0.2.1 某些启动方式会拒写：profile reload requires the root Include entry）
       notSynced: Object.keys(readOverride()),
